@@ -1,0 +1,150 @@
+# GoTour — full stack: 3 infra + 4 core services + MySQL + the React storefront.
+# Usage:
+#   mvn -DskipTests package        # build the service jars first
+#   docker compose up -d --build   # then bring the stack up
+# App:      http://localhost:8090
+# Gateway:  http://localhost:8080
+# Eureka:   http://localhost:8761
+
+name: gotour
+
+services:
+  # ----------------------------- data -----------------------------
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1234}
+    ports:
+      - "3307:3306"          # host 3307 avoids clashing with a local MySQL on 3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # -------------------------- infrastructure ----------------------
+  config-server:
+    build: ./infra/config-server
+    image: gotour/config-server:1.0.0
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/8888"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  service-registry:
+    build: ./infra/service-registry
+    image: gotour/service-registry:1.0.0
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  api-gateway:
+    build: ./infra/api-gateway
+    image: gotour/api-gateway:1.0.0
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_URL: http://service-registry:8761/eureka/
+      # Browser origins allowed to call the API. In production set this to your
+      # deployed frontend URL(s), e.g. https://your-app.vercel.app (comma-separated,
+      # no trailing slash). Defaults to the local dev origins.
+      GOTOUR_CORS_ORIGINS: ${GOTOUR_CORS_ORIGINS:-http://localhost:5176,http://localhost:8090}
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server: { condition: service_healthy }
+      service-registry: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # ---------------------------- core services ---------------------
+  identity-service:
+    build: ./services/identity-service
+    image: gotour/identity-service:1.0.0
+    environment: &service-env
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_URL: http://service-registry:8761/eureka/
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1234}
+      GOTOUR_JWT_SECRET: ${GOTOUR_JWT_SECRET:-gotour-dev-secret-key-please-change-in-production-min-64-chars-long-2026!!}
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+      service-registry: { condition: service_healthy }
+
+  catalog-service:
+    build: ./services/catalog-service
+    image: gotour/catalog-service:1.0.0
+    environment: *service-env
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+      service-registry: { condition: service_healthy }
+
+  booking-service:
+    build: ./services/booking-service
+    image: gotour/booking-service:1.0.0
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_URL: http://service-registry:8761/eureka/
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1234}
+      GOTOUR_JWT_SECRET: ${GOTOUR_JWT_SECRET:-gotour-dev-secret-key-please-change-in-production-min-64-chars-long-2026!!}
+      # Payments: RAZORPAY (online UPI / BHIM) + CASH (pay at hotel). Razorpay
+      # keys are left empty on purpose — add them to accept online payments.
+      GOTOUR_PAYMENT_PROVIDER: ${GOTOUR_PAYMENT_PROVIDER:-RAZORPAY}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+      service-registry: { condition: service_healthy }
+
+  engagement-service:
+    build: ./services/engagement-service
+    image: gotour/engagement-service:1.0.0
+    environment: *service-env
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+      service-registry: { condition: service_healthy }
+
+  # ------------------------------ frontend ------------------------
+  frontend:
+    build: ./frontend
+    image: gotour/frontend:1.0.0
+    ports:
+      - "8090:80"
+    depends_on:
+      api-gateway: { condition: service_healthy }
+
+volumes:
+  mysql-data:

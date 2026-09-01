@@ -1,0 +1,3 @@
+com.gotour.common.config.GoTourWebAutoConfiguration
+com.gotour.common.config.OpenApiConfig
+com.gotour.common.security.GoTourSecurityAutoConfiguration

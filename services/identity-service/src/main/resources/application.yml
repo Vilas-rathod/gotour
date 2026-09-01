@@ -1,0 +1,15 @@
+# All real configuration is served by the config server. This file only names
+# the service and points it there; everything else (port, datasource, JWT, JPA,
+# Flyway, Eureka) comes from infra/config-server/.../configs/{identity-service,application}.yml
+spring:
+  application:
+    name: identity-service
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        max-attempts: 30
+        initial-interval: 2000
+        max-interval: 5000

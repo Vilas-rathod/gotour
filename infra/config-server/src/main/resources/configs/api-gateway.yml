@@ -1,0 +1,52 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+          routes:
+            # ---------------- Identity (auth + users) ----------------
+            - id: identity-service
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/admin/users/**
+
+            # ---------------- Catalog (destinations + packages + hotels + reviews) ----------------
+            - id: catalog-service
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/v1/destinations/**,/api/v1/admin/destinations/**,/api/v1/packages/**,/api/v1/admin/packages/**,/api/v1/hotels/**,/api/v1/admin/hotels/**,/api/v1/reviews/**,/api/v1/admin/reviews/**
+
+            # ---------------- Booking (bookings + payments + itineraries) ----------------
+            - id: booking-service
+              uri: lb://booking-service
+              predicates:
+                - Path=/api/v1/bookings/**,/api/v1/admin/bookings/**,/api/v1/payments/**,/api/v1/admin/payments/**,/api/v1/itineraries/**
+
+            # ---------------- Engagement (wishlist + notifications) ----------------
+            - id: engagement-service
+              uri: lb://engagement-service
+              predicates:
+                - Path=/api/v1/wishlist/**,/api/v1/notifications/**
+
+gotour:
+  cors:
+    # Spring's CorsWebFilter answers a disallowed origin with 403 "Invalid CORS
+    # request", so a missing dev port here looks exactly like an auth failure.
+    # Vite increments its port when one is busy (5176 -> 5177 -> ...), hence the
+    # range. Override with GOTOUR_CORS_ORIGINS in any real environment.
+    allowed-origins: ${GOTOUR_CORS_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:5178,http://localhost:4173,http://localhost:3000,http://localhost:8090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  level:
+    com.gotour.gateway: INFO

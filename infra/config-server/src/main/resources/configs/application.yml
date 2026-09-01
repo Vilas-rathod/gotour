@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------------------
+# Shared configuration served to EVERY GoTour service by the config server.
+# Values here are the single source of truth; a service's local application.yml
+# only carries its name and the pointer back to this server.
+# Secrets must be supplied via environment variables in real deployments.
+# ---------------------------------------------------------------------------
+gotour:
+  jwt:
+    # HS512 signing key - MUST be >= 64 characters. Override in production!
+    secret: ${GOTOUR_JWT_SECRET:gotour-dev-secret-key-please-change-in-production-min-64-chars-long-2026!!}
+    issuer: gotour
+    access-token-ttl-minutes: 60
+    refresh-token-ttl-days: 7
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.gotour: INFO

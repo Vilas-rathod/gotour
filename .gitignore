@@ -1,0 +1,29 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.local
+*.local.yml
+
+# Logs
+*.log
+logs/

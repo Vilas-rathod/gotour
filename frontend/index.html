@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FBFCFC" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0C1416" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+
+    <title>GoTour — Extraordinary Journeys, Effortlessly Booked</title>
+    <meta
+      name="description"
+      content="GoTour is a premium travel booking platform. Discover destinations, curated tour packages and luxury hotels, then book in minutes with secure payments."
+    />
+    <!-- The brand faces. Without these the display serif silently fell back to
+         Georgia and the whole type system lost its voice. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Plus+Jakarta+Sans:wght@300..800&display=swap"
+    />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://gotour.example.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GoTour" />
+    <meta property="og:title" content="GoTour — Extraordinary Journeys, Effortlessly Booked" />
+    <meta
+      property="og:description"
+      content="Discover destinations, curated tour packages and luxury hotels. Book in minutes with secure payments."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script>
+      // Applied before first paint so the page never flashes the wrong theme.
+      (() => {
+        try {
+          const stored = localStorage.getItem('gotour-theme');
+          const dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+        } catch { /* private mode — fall back to light */ }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
