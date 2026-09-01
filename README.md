@@ -6,6 +6,14 @@ book curated tour packages and hotels, pay securely, and manage trips end to end
 Spring Boot microservices backend (Java 21) with a React 19 + TypeScript
 storefront, consolidated into **7 deployables** and shipped with Docker Compose.
 
+**Repository:** https://github.com/Vilas-rathod/gotour
+&nbsp;·&nbsp; **Live demo:** _add your URL once deployed_
+&nbsp;·&nbsp; **Deploy guide:** [DEPLOY_PLAYBOOK.md](DEPLOY_PLAYBOOK.md)
+
+> **Tech at a glance:** Java 21 · Spring Boot 3.5 · Spring Cloud (Eureka, Config,
+> Gateway, OpenFeign) · Spring Security + JWT · MySQL 8 + Flyway · React 19 ·
+> TypeScript · Redux Toolkit / RTK Query · Tailwind CSS · Docker Compose.
+
 ```
 React 19 SPA (nginx :8090)
         │  /api  →  API Gateway (:8080)
@@ -17,6 +25,34 @@ React 19 SPA (nginx :8090)
      └──────────┴──────────┴──────────┘
                     MySQL 8   (one schema per service)
 ```
+
+---
+
+## Features
+
+**Storefront (customer)**
+- Browse **destinations, tour packages and hotels** with search, multi-facet filters, sorting and pagination
+- Rich detail pages — image galleries, itineraries, room selection, ratings & reviews
+- **Wishlist**, **notifications**, editable **profile**, and per-trip **itineraries**
+- Multi-step **checkout** (travellers → review → payment) with **two payment methods**: Razorpay **UPI / BHIM** and **cash-on-arrival** at the hotel
+- **Bookings**: view, cancel (policy-based refunds), download invoices
+- **Auth**: register / login with JWT access + rotating refresh tokens, forgot / reset password
+- **Responsive** across mobile, tablet and desktop, with light / dark themes
+
+**Admin console**
+- **Dashboard** with revenue and booking analytics (charts + KPIs)
+- Manage **destinations, packages, hotels**; moderate **reviews**; oversee **bookings** and **payments** (issue refunds); view **customers**
+- Role-gated: `/admin/**` and `/api/v1/admin/**` require `ROLE_ADMIN`
+
+## Engineering highlights
+
+- **Spring Cloud microservices** — Eureka service discovery, a central Config Server as the single source of truth, and an API Gateway as the one public entry point.
+- **Data ownership per service** — each core service owns its own MySQL schema with its own Flyway migrations; **no cross-service joins**.
+- **Stateless security** — the identity service issues HS512 JWTs; **every** service validates them independently through a shared `common-lib` filter, and the caller's token is propagated on inter-service (OpenFeign) calls.
+- **Pluggable payment gateway** — adding a provider is one interface implementation + a config switch; the REST API, persistence and checkout flow are provider-agnostic.
+- **Typed, cached data layer** — RTK Query with tag-based cache invalidation, route-level code-splitting, and a Tailwind design system.
+- **Containerized end-to-end** — one `docker compose up` builds and starts MySQL + 7 services + the storefront, with health-gated startup ordering.
+- **Tested** — backend unit tests (JUnit + Mockito), frontend component/unit tests (Vitest + Testing Library).
 
 ---
 
